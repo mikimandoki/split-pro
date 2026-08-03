@@ -76,6 +76,7 @@ const SplitProPrismaAdapter = (...args: Parameters<typeof PrismaAdapter>): Adapt
       if (!originalLinkAccount) {
         throw new Error('Adapter is missing the linkAccount method.');
       }
+
       // OIDC providers can provide non-standard fields that do not exist in the prisma schema.
       // We strip them out before passing them on to the original adapter.
       const knownAccountFields = new Set<string>(Object.values(Prisma.AccountScalarFieldEnum));
