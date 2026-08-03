@@ -295,6 +295,10 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
         toast.error('Invalid expression');
         return;
       }
+      if (0 > evaluated) {
+        toast.error('Settlement amount cannot be negative');
+        return;
+      }
       finalAmount = getCurrencyHelpersCached(expense.currency).toSafeBigInt(evaluated);
     }
 

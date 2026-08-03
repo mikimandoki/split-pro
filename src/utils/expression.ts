@@ -9,7 +9,7 @@ export const isExpression = (input: string): boolean => {
 };
 
 export const safeEvaluateExpression = (input: string): number | null => {
-  const normalized = input.replace(/\s/g, '');
+  const normalized = input.replace(/\s/g, '').replaceAll(',', '.');
   if ('' === normalized) {
     return null;
   }

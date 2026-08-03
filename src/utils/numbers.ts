@@ -86,12 +86,13 @@ export const getCurrencyHelpers = ({
 
     `${input}`.split('').forEach((letter) => {
       //Allowing only one separator
-      if (letter === decimalSeparator && !hasDecimalSeparator) {
+      if (0 < decimalDigits && letter === decimalSeparator && !hasDecimalSeparator) {
         cleaned += letter;
         hasDecimalSeparator = true;
         return;
       }
       if (
+        0 < decimalDigits &&
         alternativeDecimal &&
         letter === alternativeDecimalSeparator &&
         !hasDecimalSeparator &&
@@ -138,11 +139,11 @@ export const getCurrencyHelpers = ({
         cleaned += letter;
         return;
       }
-      if (letter === decimalSeparator) {
+      if (0 < decimalDigits && letter === decimalSeparator) {
         cleaned += letter;
         return;
       }
-      if (alternativeDecimal && letter === alternativeDecimalSeparator) {
+      if (0 < decimalDigits && alternativeDecimal && letter === alternativeDecimalSeparator) {
         cleaned += decimalSeparator;
         return;
       }

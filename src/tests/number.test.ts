@@ -183,6 +183,22 @@ describe('getCurrencyHelpers', () => {
     });
   });
 
+  describe('zero-decimal currencies', () => {
+    const { sanitizeInput, sanitizeExpressionInput } = getCurrencyHelpers({
+      locale: 'en-US',
+      currency: 'HUF',
+    });
+
+    it('should not preserve a decimal separator', () => {
+      expect(sanitizeInput('860.')).toBe('860');
+      expect(sanitizeInput('860.1')).toBe('8601');
+    });
+
+    it('should ignore decimal separators in expressions', () => {
+      expect(sanitizeExpressionInput('860.5+2', false, true)).toBe('8605+2');
+    });
+  });
+
   describe('parseToCleanString', () => {
     const { parseToCleanString } = getCurrencyHelpers({
       locale: 'en-US',

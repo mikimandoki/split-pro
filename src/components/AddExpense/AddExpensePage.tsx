@@ -25,7 +25,7 @@ import { UploadFile } from './UploadFile';
 import { UserInput } from './UserInput';
 import { CurrencyInput } from '../ui/currency-input';
 import { CurrencyConversion } from '../Friend/CurrencyConversion';
-import { currencyConversion } from '~/utils/numbers';
+import { BigMath, currencyConversion } from '~/utils/numbers';
 import { CurrencyConversionIcon } from '../ui/categoryIcons';
 import { useSession } from 'next-auth/react';
 import { isExpression, safeEvaluateExpression } from '~/utils/expression';
@@ -119,7 +119,7 @@ export const AddOrEditExpensePage: React.FC<{
         return;
       }
       const { toSafeBigInt } = getCurrencyHelpersCached(currency);
-      finalAmount = toSafeBigInt(evaluated);
+      finalAmount = BigMath.abs(toSafeBigInt(evaluated));
     }
 
     if (finalAmount === 0n) {
