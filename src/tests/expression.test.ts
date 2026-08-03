@@ -37,6 +37,7 @@ describe('safeEvaluateExpression', () => {
     ['+10', 10],
     ['0.1+0.2', 0.3],
     ['.5+.5', 1],
+    ['1,5+2', 3.5],
     ['100*0.01', 1],
   ])('should evaluate %p to %p', (input, expected) => {
     expect(safeEvaluateExpression(input)).toBeCloseTo(expected, 10);
@@ -65,5 +66,12 @@ describe('safeEvaluateExpression', () => {
     expect(safeEvaluateExpression('2+3*4')).toBeCloseTo(14, 10);
     expect(safeEvaluateExpression('2*3+4')).toBeCloseTo(10, 10);
     expect(safeEvaluateExpression('2+3*4-1')).toBeCloseTo(13, 10);
+    expect(safeEvaluateExpression('20/5*2')).toBeCloseTo(8, 10);
+  });
+
+  it('should handle parentheses precedence', () => {
+    expect(safeEvaluateExpression('2*(3+4)')).toBeCloseTo(14, 10);
+    expect(safeEvaluateExpression('(2+3)*(4-1)')).toBeCloseTo(15, 10);
+    expect(safeEvaluateExpression('2+3*(4-1)')).toBeCloseTo(11, 10);
   });
 });

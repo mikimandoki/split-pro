@@ -52,6 +52,10 @@ export const GroupSettleUp: React.FC<{
         toast.error('Invalid expression');
         return;
       }
+      if (0 > evaluated) {
+        toast.error('Settlement amount cannot be negative');
+        return;
+      }
       finalAmount = getCurrencyHelpersCached(currency).toSafeBigInt(evaluated);
     }
 

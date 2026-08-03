@@ -2,6 +2,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from
 import { useTranslationWithUtils } from '~/hooks/useTranslationWithUtils';
 import { api } from '~/utils/api';
 import { MAX_RATE_PRECISION, currencyConversion, getRatePrecision } from '~/utils/numbers';
+import { isExpression, safeEvaluateExpression } from '~/utils/expression';
 
 import { toast } from 'sonner';
 import { type CurrencyCode, isCurrencyCode } from '~/lib/currency';
@@ -30,6 +31,14 @@ export const CurrencyConversion: React.FC<{
   const { t, getCurrencyHelpersCached } = useTranslationWithUtils();
 
   const { toUIString, toSafeBigInt } = getCurrencyHelpersCached(currency);
+
+  const getAmountValue = useCallback(
+    (value: string) => {
+      const evaluated = isExpression(value) ? safeEvaluateExpression(value) : value;
+      return evaluated === null ? null : toSafeBigInt(evaluated);
+    },
+    [toSafeBigInt],
+  );
 
   const [amountStr, setAmountStr] = useState('');
   const [rate, setRate] = useState('');
@@ -82,11 +91,11 @@ export const CurrencyConversion: React.FC<{
     const targetAmount = currencyConversion({
       from: currency,
       to: targetCurrency,
-      amount: toSafeBigInt(amountStr),
+      amount: getAmountValue(amountStr) ?? 0n,
       rate: Number(rate),
     });
     setTargetAmountStr(toUITargetString(targetAmount, false, true));
-  }, [amountStr, rate, toSafeBigInt, toUITargetString, currency, targetCurrency]);
+  }, [amountStr, rate, getAmountValue, toUITargetString, currency, targetCurrency]);
 
   const onUpdateAmount = useCallback(
     ({ strValue }: { strValue?: string; bigIntValue?: bigint }) => {
@@ -149,8 +158,14 @@ export const CurrencyConversion: React.FC<{
         return;
       }
 
+      const amountValue = getAmountValue(amountStr);
+      if (amountValue === null) {
+        toast.error('Invalid expression');
+        return;
+      }
+
       await onSubmit({
-        amount: getCurrencyHelpersCached(currency).toSafeBigInt(amountStr),
+        amount: amountValue,
         rate: Number(rate),
         from: currency,
         to: targetCurrency,
@@ -160,7 +175,7 @@ export const CurrencyConversion: React.FC<{
       console.error(error);
       toast.error(t('errors.currency_conversion_error'));
     }
-  }, [onSubmit, targetCurrency, amountStr, rate, currency, getCurrencyHelpersCached, t]);
+  }, [onSubmit, targetCurrency, amountStr, rate, currency, getAmountValue, t]);
 
   const ratePrecision = useMemo(() => {
     if (!rate) {
