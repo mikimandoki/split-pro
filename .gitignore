@@ -61,3 +61,6 @@ SEED_STATISTICS.md
 # Agents
 .worktrees/
 docs/superpowers/
+.opencode/skills/refresh/
+
+NAS_DEPLOY.md
