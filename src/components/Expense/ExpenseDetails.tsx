@@ -27,6 +27,7 @@ import { AppDrawer } from '../ui/drawer';
 import { Separator } from '../ui/separator';
 import { Receipt } from './Receipt';
 import { DateSelector } from '../AddExpense/DateSelector';
+import { isExpression, safeEvaluateExpression } from '~/utils/expression';
 
 type ExpenseDetailsOutput = NonNullable<inferRouterOutputs<ExpenseRouter>['getExpenseDetails']>;
 
@@ -287,7 +288,17 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
   );
 
   const saveExpense = useCallback(() => {
-    if (!amount || !sender || !receiver) {
+    let finalAmount = amount;
+    if (isExpression(amountStr)) {
+      const evaluated = safeEvaluateExpression(amountStr);
+      if (evaluated === null) {
+        toast.error('Invalid expression');
+        return;
+      }
+      finalAmount = getCurrencyHelpersCached(expense.currency).toSafeBigInt(evaluated);
+    }
+
+    if (!finalAmount || !sender || !receiver) {
       return;
     }
 
@@ -296,16 +307,16 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
         expenseId: expense.id,
         name: t('ui.settle_up_name'),
         currency: expense.currency,
-        amount,
+        amount: finalAmount,
         splitType: SplitType.SETTLEMENT,
         participants: [
           {
             userId: sender.id,
-            amount,
+            amount: finalAmount,
           },
           {
             userId: receiver.id,
-            amount: -amount,
+            amount: -finalAmount,
           },
         ],
         paidBy: sender.id,
@@ -323,7 +334,18 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
         },
       },
     );
-  }, [amount, sender, receiver, expense, addExpenseMutation, expenseDate, apiUtils, t]);
+  }, [
+    amount,
+    amountStr,
+    sender,
+    receiver,
+    expense,
+    addExpenseMutation,
+    expenseDate,
+    apiUtils,
+    t,
+    getCurrencyHelpersCached,
+  ]);
 
   if (!sender || !receiver) {
     return null;
@@ -340,7 +362,7 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
       title={t('ui.settlement')}
       actionTitle={t('actions.save')}
       actionOnClick={saveExpense}
-      actionDisabled={!amount}
+      actionDisabled={!amount && !isExpression(amountStr)}
       className="h-[70vh]"
       shouldCloseOnAction
     >

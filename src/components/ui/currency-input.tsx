@@ -22,16 +22,13 @@ const CurrencyInput: React.FC<
       className={cn('text-lg placeholder:text-sm', className)}
       inputMode="decimal"
       value={strValue}
-      onFocus={() => onValueChange({ strValue: parseToCleanString(strValue, allowNegative) })}
+      onFocus={() => {
+        if (!isExpression(strValue)) {
+          onValueChange({ strValue: parseToCleanString(strValue, allowNegative) });
+        }
+      }}
       onBlur={() => {
         if (isExpression(strValue)) {
-          const evaluated = safeEvaluateExpression(strValue);
-          if (evaluated !== null) {
-            const cleanStr = parseToCleanString(evaluated, allowNegative);
-            const formattedValue = format(cleanStr, { signed: allowNegative, hideSymbol });
-            const bigIntValue = toSafeBigInt(evaluated);
-            return onValueChange({ strValue: formattedValue, bigIntValue });
-          }
           return;
         }
         const formattedValue = format(strValue, { signed: allowNegative, hideSymbol });
@@ -42,10 +39,9 @@ const CurrencyInput: React.FC<
         if (isExpression(rawValue)) {
           const sanitized = sanitizeExpressionInput(rawValue, allowNegative, true);
           const evaluated = safeEvaluateExpression(sanitized);
-          onValueChange({
-            strValue: sanitized,
-            bigIntValue: evaluated !== null ? toSafeBigInt(evaluated) : undefined,
-          });
+          const bigIntValue =
+            null !== evaluated ? toSafeBigInt(evaluated, allowNegative) : undefined;
+          onValueChange({ strValue: sanitized, bigIntValue });
         } else {
           const strValue = sanitizeInput(rawValue, allowNegative, true);
           const bigIntValue = toSafeBigInt(strValue, allowNegative);

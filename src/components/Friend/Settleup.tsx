@@ -15,6 +15,7 @@ import { Button } from '../ui/button';
 import { CurrencyInput } from '../ui/currency-input';
 import { AppDrawer } from '../ui/drawer';
 import { FriendBalance } from './FriendBalance';
+import { isExpression, safeEvaluateExpression } from '~/utils/expression';
 
 export const SettleUp: React.FC<
   React.PropsWithChildren<{
@@ -62,7 +63,19 @@ export const SettleUp: React.FC<
   const utils = api.useUtils();
 
   const saveExpense = React.useCallback(() => {
-    if (!balanceToSettle || !amount || !currentUser) {
+    let finalAmount = amount;
+    if (isExpression(amountStr)) {
+      const evaluated = safeEvaluateExpression(amountStr);
+      if (evaluated === null) {
+        toast.error('Invalid expression');
+        return;
+      }
+      finalAmount = getCurrencyHelpersCached(balanceToSettle?.currency ?? 'USD').toSafeBigInt(
+        evaluated,
+      );
+    }
+
+    if (!balanceToSettle || !finalAmount || !currentUser) {
       return;
     }
 
@@ -70,16 +83,16 @@ export const SettleUp: React.FC<
       {
         name: t('ui.settle_up_name'),
         currency: balanceToSettle.currency,
-        amount,
+        amount: finalAmount,
         splitType: SplitType.SETTLEMENT,
         participants: [
           {
             userId: currentUser.id,
-            amount: isCurrentUserPaying ? amount : -amount,
+            amount: isCurrentUserPaying ? finalAmount : -finalAmount,
           },
           {
             userId: friend.id,
-            amount: isCurrentUserPaying ? -amount : amount,
+            amount: isCurrentUserPaying ? -finalAmount : finalAmount,
           },
         ],
         paidBy: isCurrentUserPaying ? currentUser.id : friend.id,
@@ -100,12 +113,14 @@ export const SettleUp: React.FC<
   }, [
     balanceToSettle,
     amount,
+    amountStr,
     currentUser,
     isCurrentUserPaying,
     friend,
     addExpenseMutation,
     utils,
     t,
+    getCurrencyHelpersCached,
   ]);
 
   const onCurrencyInputValueChange = React.useCallback(
@@ -136,7 +151,7 @@ export const SettleUp: React.FC<
       title={balanceToSettle ? t('ui.settle_up_name') : t('ui.select_balance')}
       className="h-[70vh]"
       actionTitle={t('actions.save')}
-      actionDisabled={!balanceToSettle || !amount}
+      actionDisabled={!balanceToSettle || (!amount && !isExpression(amountStr))}
       actionOnClick={saveExpense}
       shouldCloseOnAction
     >

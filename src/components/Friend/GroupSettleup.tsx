@@ -11,6 +11,7 @@ import { EntityAvatar } from '../ui/avatar';
 import { CurrencyInput } from '../ui/currency-input';
 import { AppDrawer } from '../ui/drawer';
 import { useSession } from 'next-auth/react';
+import { isExpression, safeEvaluateExpression } from '~/utils/expression';
 
 export const GroupSettleUp: React.FC<{
   amount: bigint;
@@ -44,7 +45,17 @@ export const GroupSettleUp: React.FC<{
   const receiver = 0 > _amount ? friend : user;
 
   const saveExpense = React.useCallback(() => {
-    if (!amount) {
+    let finalAmount = amount;
+    if (isExpression(amountStr)) {
+      const evaluated = safeEvaluateExpression(amountStr);
+      if (evaluated === null) {
+        toast.error('Invalid expression');
+        return;
+      }
+      finalAmount = getCurrencyHelpersCached(currency).toSafeBigInt(evaluated);
+    }
+
+    if (!finalAmount) {
       return;
     }
 
@@ -52,17 +63,17 @@ export const GroupSettleUp: React.FC<{
       {
         name: t('ui.settle_up_name'),
         currency: currency,
-        amount,
+        amount: finalAmount,
         splitType: SplitType.SETTLEMENT,
         groupId,
         participants: [
           {
             userId: sender.id,
-            amount,
+            amount: finalAmount,
           },
           {
             userId: receiver.id,
-            amount: -amount,
+            amount: -finalAmount,
           },
         ],
         paidBy: sender.id,
@@ -78,7 +89,18 @@ export const GroupSettleUp: React.FC<{
         },
       },
     );
-  }, [sender, receiver, amount, utils, addExpenseMutation, currency, groupId, t]);
+  }, [
+    sender,
+    receiver,
+    amount,
+    amountStr,
+    utils,
+    addExpenseMutation,
+    currency,
+    groupId,
+    t,
+    getCurrencyHelpersCached,
+  ]);
 
   return (
     <AppDrawer
@@ -87,7 +109,7 @@ export const GroupSettleUp: React.FC<{
       title={t('ui.settlement')}
       actionTitle={t('actions.save')}
       actionOnClick={saveExpense}
-      actionDisabled={!amount}
+      actionDisabled={!amount && !isExpression(amountStr)}
       className="h-[70vh]"
       shouldCloseOnAction
     >
