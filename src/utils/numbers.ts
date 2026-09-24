@@ -130,6 +130,30 @@ export const getCurrencyHelpers = ({
     return cleaned;
   };
 
+  const sanitizeExpressionInput = (input: string, _signed = false, alternativeDecimal = false) => {
+    let cleaned = '';
+
+    input.split('').forEach((letter) => {
+      if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(letter)) {
+        cleaned += letter;
+        return;
+      }
+      if (letter === decimalSeparator) {
+        cleaned += letter;
+        return;
+      }
+      if (alternativeDecimal && letter === alternativeDecimalSeparator) {
+        cleaned += decimalSeparator;
+        return;
+      }
+      if (['+', '-', '*', '/', '(', ')'].includes(letter)) {
+        cleaned += letter;
+      }
+    });
+
+    return cleaned;
+  };
+
   const normalizeToMaxLength = (inputString: string, signed = false) => {
     const sanitized = sanitizeInput(inputString, signed);
     const trimmedExceedingDecimals = trimExceedingDecimals(sanitized);
@@ -236,6 +260,7 @@ export const getCurrencyHelpers = ({
     format,
     formatter,
     sanitizeInput,
+    sanitizeExpressionInput,
     toSafeBigInt,
   };
 };

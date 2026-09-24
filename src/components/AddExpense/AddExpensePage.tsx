@@ -25,9 +25,10 @@ import { UploadFile } from './UploadFile';
 import { UserInput } from './UserInput';
 import { CurrencyInput } from '../ui/currency-input';
 import { CurrencyConversion } from '../Friend/CurrencyConversion';
-import { currencyConversion } from '~/utils/numbers';
+import { BigMath, currencyConversion } from '~/utils/numbers';
 import { CurrencyConversionIcon } from '../ui/categoryIcons';
 import { useSession } from 'next-auth/react';
+import { isExpression, safeEvaluateExpression } from '~/utils/expression';
 
 export const AddOrEditExpensePage: React.FC<{
   enableSendingInvites: boolean;
@@ -109,6 +110,20 @@ export const AddOrEditExpensePage: React.FC<{
       return;
     }
 
+    let finalAmount = amount;
+    if (isExpression(amtStr)) {
+      const evaluated = safeEvaluateExpression(amtStr);
+      if (evaluated === null) {
+        toast.error('Invalid expression');
+        return;
+      }
+      const { toSafeBigInt } = getCurrencyHelpersCached(currency);
+      finalAmount = BigMath.abs(toSafeBigInt(evaluated));
+    }
+
+    if (finalAmount === 0n) {
+      return;
+    }
     setMultipleTransactions([]);
     setIsTransactionLoading(false);
 
@@ -120,7 +135,7 @@ export const AddOrEditExpensePage: React.FC<{
           {
             name: description,
             currency,
-            amount: amount * sign,
+            amount: finalAmount * sign,
             groupId: group?.id ?? null,
             splitType,
             participants: participants.map((p) => ({
@@ -192,6 +207,7 @@ export const AddOrEditExpensePage: React.FC<{
     currency,
     isNegative,
     amount,
+    amtStr,
     participants,
     category,
     expenseDate,
@@ -209,6 +225,7 @@ export const AddOrEditExpensePage: React.FC<{
     multipleTransactions,
     setSingleTransaction,
     update,
+    getCurrencyHelpersCached,
   ]);
 
   const handleDescriptionChange = useCallback(
@@ -288,7 +305,7 @@ export const AddOrEditExpensePage: React.FC<{
           className="text-primary px-0"
           disabled={
             addExpenseMutation.isPending ||
-            !amount ||
+            (!amount && !isExpression(amtStr)) ||
             '' === description ||
             isFileUploading ||
             !isExpenseSettled
@@ -370,7 +387,7 @@ export const AddOrEditExpensePage: React.FC<{
                       loading={addExpenseMutation.isPending || isFileUploading}
                       disabled={
                         addExpenseMutation.isPending ||
-                        !amount ||
+                        (!amount && !isExpression(amtStr)) ||
                         '' === description ||
                         isFileUploading ||
                         !isExpenseSettled
