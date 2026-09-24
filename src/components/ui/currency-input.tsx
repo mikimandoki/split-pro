@@ -14,29 +14,14 @@ const CurrencyInput: React.FC<
   }
 > = ({ className, currency, allowNegative, strValue, onValueChange, hideSymbol, ...props }) => {
   const { getCurrencyHelpersCached } = useTranslationWithUtils(undefined);
-  const {
-    format,
-    parseToCleanString,
-    toSafeBigInt,
-    expressionResultToBigInt,
-    sanitizeInput,
-    sanitizeExpressionInput,
-  } = getCurrencyHelpersCached(currency);
+  const { format, toSafeBigInt, expressionResultToBigInt, sanitizeInput, sanitizeExpressionInput } =
+    getCurrencyHelpersCached(currency);
 
   return (
     <Input
       className={cn('text-lg placeholder:text-sm', className)}
       inputMode="decimal"
       value={strValue}
-      onFocus={() => {
-        if (!isExpression(strValue)) {
-          const cleanValue = parseToCleanString(strValue, allowNegative);
-          onValueChange({
-            strValue: cleanValue,
-            bigIntValue: toSafeBigInt(cleanValue, allowNegative),
-          });
-        }
-      }}
       onBlur={() => {
         if (isExpression(strValue)) {
           return;

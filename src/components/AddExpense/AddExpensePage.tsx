@@ -82,9 +82,17 @@ export const AddOrEditExpensePage: React.FC<{
         return;
       }
 
+      if (newCurrency === currency) {
+        return;
+      }
+
       updateProfile.mutate({ currency: newCurrency });
 
-      previousCurrencyRef.current = currency;
+      if (newCurrency === previousCurrencyRef.current) {
+        previousCurrencyRef.current = null;
+      } else if (previousCurrencyRef.current === null) {
+        previousCurrencyRef.current = currency;
+      }
       setCurrency(newCurrency);
     },
     [currency, setCurrency, updateProfile],

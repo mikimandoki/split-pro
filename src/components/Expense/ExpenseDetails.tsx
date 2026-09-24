@@ -307,8 +307,6 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
       return;
     }
 
-    setOpen(false);
-
     addExpenseMutation.mutate(
       {
         expenseId: expense.id,
@@ -333,6 +331,7 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
       },
       {
         onSuccess: () => {
+          setOpen(false);
           apiUtils.invalidate().catch(console.error);
         },
         onError: (error) => {

@@ -153,24 +153,28 @@ describe('getCurrencyHelpers', () => {
   });
 
   describe('expressionResultToBigInt', () => {
-    it('should parse canonical decimal results using the currency precision', () => {
-      const { expressionResultToBigInt } = getCurrencyHelpers({
-        locale: 'de-DE',
-        currency: 'EUR',
-      });
+    describe('two-decimal currencies', () => {
+      it('should convert canonical decimal results to the smallest currency unit', () => {
+        const { expressionResultToBigInt } = getCurrencyHelpers({
+          locale: 'de-DE',
+          currency: 'EUR',
+        });
 
-      expect(expressionResultToBigInt('41.25')).toBe(4125n);
-      expect(expressionResultToBigInt('0.6666666667')).toBe(67n);
+        expect(expressionResultToBigInt('41.25')).toBe(4125n);
+        expect(expressionResultToBigInt('0.6666666667')).toBe(67n);
+      });
     });
 
-    it('should round results for zero-decimal currencies', () => {
-      const { expressionResultToBigInt } = getCurrencyHelpers({
-        locale: 'en-US',
-        currency: 'JPY',
-      });
+    describe('zero-decimal currencies', () => {
+      it('should round fractional results to the nearest currency unit', () => {
+        const { expressionResultToBigInt } = getCurrencyHelpers({
+          locale: 'en-US',
+          currency: 'JPY',
+        });
 
-      expect(expressionResultToBigInt('33.3333333333')).toBe(33n);
-      expect(expressionResultToBigInt('33.6666666667')).toBe(34n);
+        expect(expressionResultToBigInt('33.3333333333')).toBe(33n);
+        expect(expressionResultToBigInt('33.6666666667')).toBe(34n);
+      });
     });
   });
 
