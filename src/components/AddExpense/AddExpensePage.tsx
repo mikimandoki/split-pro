@@ -114,11 +114,11 @@ export const AddOrEditExpensePage: React.FC<{
     if (isExpression(amtStr)) {
       const evaluated = safeEvaluateExpression(amtStr);
       if (evaluated === null) {
-        toast.error('Invalid expression');
+        toast.error(t('errors.invalid_expression'));
         return;
       }
-      const { toSafeBigInt } = getCurrencyHelpersCached(currency);
-      finalAmount = BigMath.abs(toSafeBigInt(evaluated));
+      const { expressionResultToBigInt } = getCurrencyHelpersCached(currency);
+      finalAmount = BigMath.abs(expressionResultToBigInt(evaluated));
     }
 
     if (finalAmount === 0n) {
@@ -203,6 +203,7 @@ export const AddOrEditExpensePage: React.FC<{
       }
     }
   }, [
+    t,
     description,
     currency,
     isNegative,

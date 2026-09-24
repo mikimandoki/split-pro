@@ -67,16 +67,16 @@ export const SettleUp: React.FC<
     if (isExpression(amountStr)) {
       const evaluated = safeEvaluateExpression(amountStr);
       if (evaluated === null) {
-        toast.error('Invalid expression');
+        toast.error(t('errors.invalid_expression'));
         return;
       }
-      if (0 > evaluated) {
-        toast.error('Settlement amount cannot be negative');
+      if (evaluated.startsWith('-')) {
+        toast.error(t('errors.negative_settlement_amount'));
         return;
       }
-      finalAmount = getCurrencyHelpersCached(balanceToSettle?.currency ?? 'USD').toSafeBigInt(
-        evaluated,
-      );
+      finalAmount = getCurrencyHelpersCached(
+        balanceToSettle?.currency ?? 'USD',
+      ).expressionResultToBigInt(evaluated);
     }
 
     if (!balanceToSettle || !finalAmount || !currentUser) {

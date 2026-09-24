@@ -2,20 +2,26 @@ import React from 'react';
 import { Input, InputProps } from './input';
 import { cn } from '~/lib/utils';
 import { useTranslationWithUtils } from '~/hooks/useTranslationWithUtils';
-import { isExpression, safeEvaluateExpression } from '~/utils/expression';
+import { isExpression, isValidExpressionResult, safeEvaluateExpression } from '~/utils/expression';
 
 const CurrencyInput: React.FC<
   Omit<InputProps, 'type' | 'inputMode'> & {
     currency: string;
     strValue: string;
-    onValueChange: (v: { strValue?: string; bigIntValue?: bigint }) => void;
+    onValueChange: (v: { strValue?: string; bigIntValue?: bigint; isValid?: boolean }) => void;
     allowNegative?: boolean;
     hideSymbol?: boolean;
   }
 > = ({ className, currency, allowNegative, strValue, onValueChange, hideSymbol, ...props }) => {
   const { getCurrencyHelpersCached } = useTranslationWithUtils(undefined);
-  const { format, parseToCleanString, toSafeBigInt, sanitizeInput, sanitizeExpressionInput } =
-    getCurrencyHelpersCached(currency);
+  const {
+    format,
+    parseToCleanString,
+    toSafeBigInt,
+    expressionResultToBigInt,
+    sanitizeInput,
+    sanitizeExpressionInput,
+  } = getCurrencyHelpersCached(currency);
 
   return (
     <Input
@@ -39,13 +45,14 @@ const CurrencyInput: React.FC<
         if (isExpression(rawValue)) {
           const sanitized = sanitizeExpressionInput(rawValue, allowNegative, true);
           const evaluated = safeEvaluateExpression(sanitized);
+          const isValid = isValidExpressionResult(evaluated, allowNegative);
           const bigIntValue =
-            null !== evaluated ? toSafeBigInt(evaluated, allowNegative) : undefined;
-          onValueChange({ strValue: sanitized, bigIntValue });
+            isValid && null !== evaluated ? expressionResultToBigInt(evaluated) : undefined;
+          onValueChange({ strValue: sanitized, bigIntValue, isValid });
         } else {
           const strValue = sanitizeInput(rawValue, allowNegative, true);
           const bigIntValue = toSafeBigInt(strValue, allowNegative);
-          onValueChange({ strValue, bigIntValue });
+          onValueChange({ strValue, bigIntValue, isValid: true });
         }
       }}
       {...props}

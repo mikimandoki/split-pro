@@ -2,7 +2,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from
 import { useTranslationWithUtils } from '~/hooks/useTranslationWithUtils';
 import { api } from '~/utils/api';
 import { MAX_RATE_PRECISION, currencyConversion, getRatePrecision } from '~/utils/numbers';
-import { isExpression, safeEvaluateExpression } from '~/utils/expression';
+import { isExpression, isValidExpressionResult, safeEvaluateExpression } from '~/utils/expression';
 
 import { toast } from 'sonner';
 import { type CurrencyCode, isCurrencyCode } from '~/lib/currency';
@@ -30,14 +30,18 @@ export const CurrencyConversion: React.FC<{
 }> = ({ amount, editingRate, editingTargetCurrency, currency, children, onSubmit }) => {
   const { t, getCurrencyHelpersCached } = useTranslationWithUtils();
 
-  const { toUIString, toSafeBigInt } = getCurrencyHelpersCached(currency);
+  const { toUIString, toSafeBigInt, expressionResultToBigInt } = getCurrencyHelpersCached(currency);
 
   const getAmountValue = useCallback(
     (value: string) => {
-      const evaluated = isExpression(value) ? safeEvaluateExpression(value) : value;
-      return evaluated === null ? null : toSafeBigInt(evaluated);
+      if (!isExpression(value)) {
+        return toSafeBigInt(value);
+      }
+
+      const evaluated = safeEvaluateExpression(value);
+      return isValidExpressionResult(evaluated) ? expressionResultToBigInt(evaluated) : null;
     },
-    [toSafeBigInt],
+    [expressionResultToBigInt, toSafeBigInt],
   );
 
   const [amountStr, setAmountStr] = useState('');
@@ -160,7 +164,7 @@ export const CurrencyConversion: React.FC<{
 
       const amountValue = getAmountValue(amountStr);
       if (amountValue === null) {
-        toast.error('Invalid expression');
+        toast.error(t('errors.invalid_expression'));
         return;
       }
 

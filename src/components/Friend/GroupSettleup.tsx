@@ -49,14 +49,14 @@ export const GroupSettleUp: React.FC<{
     if (isExpression(amountStr)) {
       const evaluated = safeEvaluateExpression(amountStr);
       if (evaluated === null) {
-        toast.error('Invalid expression');
+        toast.error(t('errors.invalid_expression'));
         return;
       }
-      if (0 > evaluated) {
-        toast.error('Settlement amount cannot be negative');
+      if (evaluated.startsWith('-')) {
+        toast.error(t('errors.negative_settlement_amount'));
         return;
       }
-      finalAmount = getCurrencyHelpersCached(currency).toSafeBigInt(evaluated);
+      finalAmount = getCurrencyHelpersCached(currency).expressionResultToBigInt(evaluated);
     }
 
     if (!finalAmount) {

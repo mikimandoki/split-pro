@@ -37,6 +37,19 @@ export const getCurrencyHelpers = ({
     return parseToBigIntBeforeSubmit(stringNumber);
   };
 
+  const expressionResultToBigInt = (decimal: string): bigint => {
+    const negative = decimal.startsWith('-');
+    const unsignedDecimal = negative ? decimal.slice(1) : decimal;
+    const [integerPart = '0', fractionPart = ''] = unsignedDecimal.split('.');
+    const scale = 10n ** BigInt(fractionPart.length);
+    const value = BigMath.roundDiv(
+      BigInt(`${integerPart || '0'}${fractionPart}`) * decimalMultiplierN,
+      scale,
+    );
+
+    return negative ? -value : value;
+  };
+
   /* Parse sanitized string to number before submit */
   const parseToBigIntBeforeSubmit = (stringNumber: string | number | bigint): bigint => {
     if (typeof stringNumber === 'number') {
@@ -263,6 +276,7 @@ export const getCurrencyHelpers = ({
     sanitizeInput,
     sanitizeExpressionInput,
     toSafeBigInt,
+    expressionResultToBigInt,
   };
 };
 
