@@ -50,6 +50,15 @@ export const SettleUp: React.FC<
   );
 
   const isCurrentUserPaying = 0 > (balanceToSettle?.amount ?? 0);
+  const amountIsExpression = isExpression(amountStr);
+  const evaluatedExpression = amountIsExpression ? safeEvaluateExpression(amountStr) : null;
+  const evaluatedExpressionAmount =
+    null !== evaluatedExpression && !evaluatedExpression.startsWith('-')
+      ? getCurrencyHelpersCached(balanceToSettle?.currency ?? 'USD').expressionResultToBigInt(
+          evaluatedExpression,
+        )
+      : 0n;
+  const canSave = amountIsExpression ? 0n < evaluatedExpressionAmount : 0n < amount;
 
   function onSelectBalance(balance: MinimalBalance) {
     setBalanceToSettle(balance);
@@ -155,7 +164,7 @@ export const SettleUp: React.FC<
       title={balanceToSettle ? t('ui.settle_up_name') : t('ui.select_balance')}
       className="h-[70vh]"
       actionTitle={t('actions.save')}
-      actionDisabled={!balanceToSettle || (!amount && !isExpression(amountStr))}
+      actionDisabled={!balanceToSettle || !canSave}
       actionOnClick={saveExpense}
       shouldCloseOnAction
     >

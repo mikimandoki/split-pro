@@ -99,8 +99,8 @@ export const AddOrEditExpensePage: React.FC<{
       }
       if (bigIntValue !== undefined) {
         setAmount(bigIntValue);
+        previousCurrencyRef.current = null;
       }
-      previousCurrencyRef.current = null;
     },
     [setAmount, setAmountStr],
   );
@@ -113,7 +113,7 @@ export const AddOrEditExpensePage: React.FC<{
     let finalAmount = amount;
     if (isExpression(amtStr)) {
       const evaluated = safeEvaluateExpression(amtStr);
-      if (evaluated === null) {
+      if (null === evaluated) {
         toast.error(t('errors.invalid_expression'));
         return;
       }
@@ -121,7 +121,7 @@ export const AddOrEditExpensePage: React.FC<{
       finalAmount = BigMath.abs(expressionResultToBigInt(evaluated));
     }
 
-    if (finalAmount === 0n) {
+    if (0n === finalAmount) {
       return;
     }
     setMultipleTransactions([]);
@@ -306,6 +306,7 @@ export const AddOrEditExpensePage: React.FC<{
           className="text-primary px-0"
           disabled={
             addExpenseMutation.isPending ||
+            null !== previousCurrencyRef.current ||
             (!amount && !isExpression(amtStr)) ||
             '' === description ||
             isFileUploading ||
@@ -388,6 +389,7 @@ export const AddOrEditExpensePage: React.FC<{
                       loading={addExpenseMutation.isPending || isFileUploading}
                       disabled={
                         addExpenseMutation.isPending ||
+                        null !== previousCurrencyRef.current ||
                         (!amount && !isExpression(amtStr)) ||
                         '' === description ||
                         isFileUploading ||

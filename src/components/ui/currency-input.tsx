@@ -30,7 +30,11 @@ const CurrencyInput: React.FC<
       value={strValue}
       onFocus={() => {
         if (!isExpression(strValue)) {
-          onValueChange({ strValue: parseToCleanString(strValue, allowNegative) });
+          const cleanValue = parseToCleanString(strValue, allowNegative);
+          onValueChange({
+            strValue: cleanValue,
+            bigIntValue: toSafeBigInt(cleanValue, allowNegative),
+          });
         }
       }}
       onBlur={() => {

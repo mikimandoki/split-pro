@@ -43,6 +43,13 @@ export const GroupSettleUp: React.FC<{
 
   const sender = 0 > _amount ? user : friend;
   const receiver = 0 > _amount ? friend : user;
+  const amountIsExpression = isExpression(amountStr);
+  const evaluatedExpression = amountIsExpression ? safeEvaluateExpression(amountStr) : null;
+  const evaluatedExpressionAmount =
+    null !== evaluatedExpression && !evaluatedExpression.startsWith('-')
+      ? getCurrencyHelpersCached(currency).expressionResultToBigInt(evaluatedExpression)
+      : 0n;
+  const canSave = amountIsExpression ? 0n < evaluatedExpressionAmount : 0n < amount;
 
   const saveExpense = React.useCallback(() => {
     let finalAmount = amount;
@@ -113,7 +120,7 @@ export const GroupSettleUp: React.FC<{
       title={t('ui.settlement')}
       actionTitle={t('actions.save')}
       actionOnClick={saveExpense}
-      actionDisabled={!amount && !isExpression(amountStr)}
+      actionDisabled={!canSave}
       className="h-[70vh]"
       shouldCloseOnAction
     >

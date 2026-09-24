@@ -271,6 +271,7 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
   const [amountStr, setAmountStr] = useState<string>(
     getCurrencyHelpersCached(expense.currency).toUIString(BigMath.abs(expense.amount)),
   );
+  const [open, setOpen] = useState(false);
 
   const addExpenseMutation = api.expense.addOrEditExpense.useMutation();
   const apiUtils = api.useUtils();
@@ -291,7 +292,7 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
     let finalAmount = amount;
     if (isExpression(amountStr)) {
       const evaluated = safeEvaluateExpression(amountStr);
-      if (evaluated === null) {
+      if (null === evaluated) {
         toast.error(t('errors.invalid_expression'));
         return;
       }
@@ -302,9 +303,11 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
       finalAmount = getCurrencyHelpersCached(expense.currency).expressionResultToBigInt(evaluated);
     }
 
-    if (!finalAmount || !sender || !receiver) {
+    if (0n === finalAmount || !sender || !receiver) {
       return;
     }
+
+    setOpen(false);
 
     addExpenseMutation.mutate(
       {
@@ -362,13 +365,15 @@ export const EditSettlement: React.FC<{ expense: ExpenseDetailsOutput }> = ({ ex
           <PencilIcon className="mr-1 h-4 w-4" />
         </Button>
       }
+      open={open}
+      onOpenChange={setOpen}
       leftAction={t('actions.back')}
       title={t('ui.settlement')}
       actionTitle={t('actions.save')}
       actionOnClick={saveExpense}
       actionDisabled={!amount && !isExpression(amountStr)}
       className="h-[70vh]"
-      shouldCloseOnAction
+      shouldCloseOnAction={false}
     >
       <div className="mt-10 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center">

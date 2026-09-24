@@ -22,7 +22,14 @@ export const getCurrencyHelpers = ({
   const thousandSeparator =
     formatter.formatToParts(11111111).find(({ type }) => type === 'group')?.value ?? '';
   const decimalSeparator =
-    formatter.formatToParts(1.1).find(({ type }) => type === 'decimal')?.value ?? '.';
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: Math.max(1, decimalDigits),
+    })
+      .formatToParts(1.1)
+      .find(({ type }) => type === 'decimal')?.value ?? '.';
   const alternativeDecimalSeparator = decimalSeparator === '.' ? ',' : '.';
   const literalSeparator =
     formatter.formatToParts(1.1).find(({ type }) => type === 'literal')?.value ?? '';
@@ -96,25 +103,32 @@ export const getCurrencyHelpers = ({
     let cleaned = '';
     let hasDecimalSeparator = false;
     let hasNegativeSign = false;
+    let ignoreFraction = false;
 
     `${input}`.split('').forEach((letter) => {
-      //Allowing only one separator
-      if (0 < decimalDigits && letter === decimalSeparator && !hasDecimalSeparator) {
-        cleaned += letter;
-        hasDecimalSeparator = true;
-        return;
-      }
-      if (
-        0 < decimalDigits &&
+      const isAlternativeDecimalSeparator =
         alternativeDecimal &&
         letter === alternativeDecimalSeparator &&
-        !hasDecimalSeparator &&
-        !input.includes(decimalSeparator)
-      ) {
-        cleaned += decimalSeparator;
-        hasDecimalSeparator = true;
+        !input.includes(decimalSeparator);
+      if (0 === decimalDigits && letter === thousandSeparator) {
         return;
       }
+      if (letter === decimalSeparator || isAlternativeDecimalSeparator) {
+        if (0 === decimalDigits) {
+          ignoreFraction = true;
+          return;
+        }
+        if (!hasDecimalSeparator) {
+          cleaned += letter === decimalSeparator ? letter : decimalSeparator;
+          hasDecimalSeparator = true;
+        }
+        return;
+      }
+
+      if (ignoreFraction && ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(letter)) {
+        return;
+      }
+
       // When a user presses '-' sign, switch the sign of the number
       if (letter === '-' && !hasNegativeSign) {
         hasNegativeSign = true;
@@ -146,22 +160,31 @@ export const getCurrencyHelpers = ({
 
   const sanitizeExpressionInput = (input: string, _signed = false, alternativeDecimal = false) => {
     let cleaned = '';
+    let ignoreFraction = false;
 
     input.split('').forEach((letter) => {
       if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(letter)) {
-        cleaned += letter;
+        if (!ignoreFraction) {
+          cleaned += letter;
+        }
         return;
       }
-      if (0 < decimalDigits && letter === decimalSeparator) {
-        cleaned += letter;
+      const isAlternativeDecimalSeparator =
+        alternativeDecimal && letter === alternativeDecimalSeparator;
+      if (0 === decimalDigits && letter === thousandSeparator) {
         return;
       }
-      if (0 < decimalDigits && alternativeDecimal && letter === alternativeDecimalSeparator) {
-        cleaned += decimalSeparator;
+      if (letter === decimalSeparator || isAlternativeDecimalSeparator) {
+        if (0 === decimalDigits) {
+          ignoreFraction = true;
+          return;
+        }
+        cleaned += letter === decimalSeparator ? letter : decimalSeparator;
         return;
       }
       if (['+', '-', '*', '/', '(', ')'].includes(letter)) {
         cleaned += letter;
+        ignoreFraction = false;
       }
     });
 
