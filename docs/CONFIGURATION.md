@@ -13,6 +13,8 @@ This document lists SplitPro environment variables and how they are used. The au
 - `POSTGRES_PORT`: Database port.
 - `DATABASE_URL`: Full connection string used by the app.
 
+`POSTGRES_USER` may be a regular (non-superuser) role when `pg_cron` is preinstalled. See [docker/README.md](../docker/README.md).
+
 ### Authentication (NextAuth)
 
 - `NEXTAUTH_SECRET`: Secret used to sign tokens. Generate with `openssl rand -base64 32`.
@@ -66,6 +68,10 @@ Used for magic-link login and invites.
 - `GOCARDLESS_INTERVAL_IN_DAYS`
 
 ### OAuth providers
+
+#### Shared OAuth settings
+
+- `OAUTH_AUTO_REDIRECT`: Optional flag. When set to `true`, the sign-in page automatically redirects when exactly one OAuth provider is configured and no other authentication providers are enabled. This applies to Google, Authentik, Keycloak, and generic OIDC.
 
 #### Google
 
