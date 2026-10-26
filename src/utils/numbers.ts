@@ -1,4 +1,5 @@
 import { CURRENCIES, type CurrencyCode, isCurrencyCode } from '~/lib/currency';
+import type { ExpressionResult } from '~/utils/expression';
 
 export const getCurrencyHelpers = ({
   locale = 'en-US',
@@ -36,6 +37,9 @@ export const getCurrencyHelpers = ({
 
     return parseToBigIntBeforeSubmit(stringNumber);
   };
+
+  const expressionResultToBigInt = ({ numerator, denominator }: ExpressionResult): bigint =>
+    BigMath.roundDiv(numerator * decimalMultiplierN, denominator);
 
   /* Parse sanitized string to number before submit */
   const parseToBigIntBeforeSubmit = (stringNumber: string | number | bigint): bigint => {
@@ -237,6 +241,7 @@ export const getCurrencyHelpers = ({
     formatter,
     sanitizeInput,
     toSafeBigInt,
+    expressionResultToBigInt,
   };
 };
 

@@ -145,6 +145,7 @@
     "group_name_update_failed": "Error in updating group name",
     "import_failed": "Error importing file",
     "invalid_currency_code": "Invalid currency code {code}",
+    "invalid_expression": "Invalid expression",
     "invalid_split": "Adjust who owes this expense before saving.",
     "language_change_failed": "Error changing language",
     "less_than": "File should be less than {size}MB",
