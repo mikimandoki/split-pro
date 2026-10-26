@@ -116,7 +116,6 @@ export const AddOrEditExpensePage: React.FC<{
     if (isExpression(amtStr)) {
       const evaluated = safeEvaluateExpression(amtStr);
       if (null === evaluated) {
-        toast.error(t('errors.invalid_expression'));
         return;
       }
       finalAmount = BigMath.abs(
