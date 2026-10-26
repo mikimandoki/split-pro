@@ -236,6 +236,8 @@ export const getCurrencyHelpers = ({
 
   return {
     decimalDigits,
+    decimalSeparator,
+    alternativeDecimalSeparator,
     parseToCleanString,
     toUIString,
     format,

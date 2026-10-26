@@ -26,6 +26,8 @@ const CurrencyInput: React.FC<
   const { getCurrencyHelpersCached } = useTranslationWithUtils(undefined);
   const {
     decimalDigits,
+    decimalSeparator,
+    alternativeDecimalSeparator,
     format,
     parseToCleanString,
     toSafeBigInt,
@@ -54,7 +56,12 @@ const CurrencyInput: React.FC<
       onChange={(e) => {
         const rawValue = e.target.value;
         if (allowExpressions && isExpression(rawValue)) {
-          const strValue = sanitizeExpressionInput(rawValue, decimalDigits);
+          const strValue = sanitizeExpressionInput(
+            rawValue,
+            decimalDigits,
+            decimalSeparator,
+            alternativeDecimalSeparator,
+          );
           const evaluated = safeEvaluateExpression(strValue);
           return onValueChange({
             strValue,

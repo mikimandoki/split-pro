@@ -16,11 +16,16 @@ describe('isExpression', () => {
 
 describe('sanitizeExpressionInput', () => {
   it('keeps arithmetic and decimal characters only', () => {
-    expect(sanitizeExpressionInput('$30.5 + 10,75 xyz', 2)).toBe('30.5+10,75');
+    expect(sanitizeExpressionInput('$30.5 + 10,75 xyz', 2)).toBe('30.5+10.75');
   });
 
   it('limits each operand to the currency precision', () => {
     expect(sanitizeExpressionInput('1.234+3.456/0.789', 2)).toBe('1.23+3.45/0.78');
+  });
+
+  it('normalizes alternate decimal marks to the locale separator', () => {
+    expect(sanitizeExpressionInput('12,5+3.75', 2, '.', ',')).toBe('12.5+3.75');
+    expect(sanitizeExpressionInput('12,5+3.75', 2, ',', '.')).toBe('12,5+3,75');
   });
 
   it('drops fractional digits for zero-decimal currencies', () => {
@@ -37,6 +42,7 @@ describe('safeEvaluateExpression', () => {
     ['2++3', { numerator: 5n, denominator: 1n }],
     ['0.1+0.2', { numerator: 3n, denominator: 10n }],
     ['1,5+2', { numerator: 7n, denominator: 2n }],
+    ['12,5+3,75', { numerator: 65n, denominator: 4n }],
     ['9007199254740992+1', { numerator: 9007199254740993n, denominator: 1n }],
     ['-10+5', { numerator: -5n, denominator: 1n }],
   ])('evaluates %p exactly', (input, expected) => {

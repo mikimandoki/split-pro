@@ -6,7 +6,12 @@ export interface ExpressionResult {
 export const isExpression = (input: string): boolean =>
   /[+*/()]/.test(input) || (input.length > 1 && input.slice(1).includes('-'));
 
-export const sanitizeExpressionInput = (input: string, decimalDigits: number): string => {
+export const sanitizeExpressionInput = (
+  input: string,
+  decimalDigits: number,
+  decimalSeparator = '.',
+  alternativeDecimalSeparator = decimalSeparator === '.' ? ',' : '.',
+): string => {
   let cleaned = '';
   let hasDecimalSeparator = false;
   let fractionalDigits = 0;
@@ -27,11 +32,11 @@ export const sanitizeExpressionInput = (input: string, decimalDigits: number): s
       return;
     }
 
-    if ('.' === character || ',' === character) {
+    if (character === decimalSeparator || character === alternativeDecimalSeparator) {
       if (0 === decimalDigits) {
         ignoreFraction = true;
       } else if (!hasDecimalSeparator) {
-        cleaned += character;
+        cleaned += decimalSeparator;
         hasDecimalSeparator = true;
       }
       return;
