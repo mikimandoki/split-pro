@@ -16,7 +16,15 @@ describe('isExpression', () => {
 
 describe('sanitizeExpressionInput', () => {
   it('keeps arithmetic and decimal characters only', () => {
-    expect(sanitizeExpressionInput('$30.5 + 10,75 xyz')).toBe('30.5+10,75');
+    expect(sanitizeExpressionInput('$30.5 + 10,75 xyz', 2)).toBe('30.5+10,75');
+  });
+
+  it('limits each operand to the currency precision', () => {
+    expect(sanitizeExpressionInput('1.234+3.456/0.789', 2)).toBe('1.23+3.45/0.78');
+  });
+
+  it('drops fractional digits for zero-decimal currencies', () => {
+    expect(sanitizeExpressionInput('12.34+5.6', 0)).toBe('12+5');
   });
 });
 

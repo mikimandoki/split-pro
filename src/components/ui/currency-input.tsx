@@ -25,10 +25,10 @@ const CurrencyInput: React.FC<
 }) => {
   const { getCurrencyHelpersCached } = useTranslationWithUtils(undefined);
   const {
+    decimalDigits,
     format,
     parseToCleanString,
     toSafeBigInt,
-    toUIString,
     expressionResultToBigInt,
     sanitizeInput,
   } = getCurrencyHelpersCached(currency);
@@ -45,16 +45,7 @@ const CurrencyInput: React.FC<
       }}
       onBlur={() => {
         if (allowExpressions && isExpression(strValue)) {
-          const evaluated = safeEvaluateExpression(strValue);
-          if (null === evaluated) {
-            return;
-          }
-
-          const bigIntValue = expressionResultToBigInt(evaluated);
-          return onValueChange({
-            strValue: toUIString(bigIntValue, allowNegative, hideSymbol),
-            bigIntValue,
-          });
+          return;
         }
 
         const formattedValue = format(strValue, { signed: allowNegative, hideSymbol });
@@ -63,7 +54,7 @@ const CurrencyInput: React.FC<
       onChange={(e) => {
         const rawValue = e.target.value;
         if (allowExpressions && isExpression(rawValue)) {
-          const strValue = sanitizeExpressionInput(rawValue);
+          const strValue = sanitizeExpressionInput(rawValue, decimalDigits);
           const evaluated = safeEvaluateExpression(strValue);
           return onValueChange({
             strValue,

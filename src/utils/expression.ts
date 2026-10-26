@@ -6,8 +6,47 @@ export interface ExpressionResult {
 export const isExpression = (input: string): boolean =>
   /[+*/()]/.test(input) || (input.length > 1 && input.slice(1).includes('-'));
 
-export const sanitizeExpressionInput = (input: string): string =>
-  input.replace(/[^0-9.,+\-*/()]/g, '');
+export const sanitizeExpressionInput = (input: string, decimalDigits: number): string => {
+  let cleaned = '';
+  let hasDecimalSeparator = false;
+  let fractionalDigits = 0;
+  let ignoreFraction = false;
+
+  input.split('').forEach((character) => {
+    if (/[0-9]/.test(character)) {
+      if (ignoreFraction) {
+        return;
+      }
+      if (hasDecimalSeparator) {
+        if (fractionalDigits >= decimalDigits) {
+          return;
+        }
+        fractionalDigits += 1;
+      }
+      cleaned += character;
+      return;
+    }
+
+    if ('.' === character || ',' === character) {
+      if (0 === decimalDigits) {
+        ignoreFraction = true;
+      } else if (!hasDecimalSeparator) {
+        cleaned += character;
+        hasDecimalSeparator = true;
+      }
+      return;
+    }
+
+    if (['+', '-', '*', '/', '(', ')'].includes(character)) {
+      cleaned += character;
+      hasDecimalSeparator = false;
+      fractionalDigits = 0;
+      ignoreFraction = false;
+    }
+  });
+
+  return cleaned;
+};
 
 const abs = (value: bigint) => (0n > value ? -value : value);
 

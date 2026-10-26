@@ -207,7 +207,6 @@ export const AddOrEditExpensePage: React.FC<{
       }
     }
   }, [
-    t,
     description,
     currency,
     isNegative,
